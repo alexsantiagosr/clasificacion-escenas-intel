@@ -92,6 +92,7 @@ Se ejecutó `codigo/03_evaluacion_final.py` una vez sobre las 3.000 imágenes de
 - F1 por clase: buildings 0,9171; forest 0,9884; glacier 0,8553; mountain 0,8585; sea 0,9450; street 0,9279.
 - Mejores resultados por clase: forest (recall 0,9916) y sea (recall 0,9608).
 - Las clases con más confusión son glacier y mountain: 48 glaciares se predijeron como montaña y 71 montañas como glaciar. También hubo 35 edificios predichos como calle y 29 calles como edificios.
+- Ejemplo concreto para discutir el error: `seg_test/seg_test/mountain/20071.jpg` tiene etiqueta real `mountain`; el modelo predijo `glacier` con 0,8283. La imagen contiene picos nevados dentro de un mural/cartel; la semejanza visual con glaciares ayuda a explicar el error y muestra que una puntuación softmax alta no garantiza que la clase sea correcta.
 - Interpretación: el modelo generaliza alrededor del 91% en datos no usados para entrenar. La confusión entre glacier/mountain y buildings/street es coherente con similitudes visuales entre categorías. Forest es la clase más distinguible en esta prueba.
 - Para preservar `seg_test` como evaluación final independiente, el modelo se conserva como candidato final sin ajustar hiperparámetros a partir de estos errores.
 - Archivos generados: `resultados/metricas_prueba.txt`, `resultados/matriz_confusion_prueba.png` y `resultados/predicciones_prueba.csv`.
