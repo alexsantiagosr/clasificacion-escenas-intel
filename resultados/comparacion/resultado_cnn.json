@@ -1,0 +1,80 @@
+{
+  "modelo": "cnn",
+  "parametros_entrenables": 110758,
+  "parametros_totales": 111206,
+  "epocas_corridas": 15,
+  "mejor_epoca_val": 14,
+  "val_loss_mejor": 0.4830143451690674,
+  "val_accuracy_mejor": 0.8214540481567383,
+  "test_accuracy": 0.821,
+  "test_f1_macro": 0.8218580174609835,
+  "test_precision_macro": 0.8238492537813585,
+  "test_recall_macro": 0.8252611416364731,
+  "segundos_entrenamiento": 7945.5,
+  "matriz_confusion": [
+    [
+      371,
+      3,
+      2,
+      4,
+      4,
+      53
+    ],
+    [
+      4,
+      463,
+      0,
+      3,
+      0,
+      4
+    ],
+    [
+      17,
+      2,
+      394,
+      74,
+      56,
+      10
+    ],
+    [
+      17,
+      5,
+      48,
+      398,
+      54,
+      3
+    ],
+    [
+      29,
+      5,
+      13,
+      13,
+      438,
+      12
+    ],
+    [
+      86,
+      7,
+      0,
+      4,
+      5,
+      399
+    ]
+  ],
+  "clases": [
+    "buildings",
+    "forest",
+    "glacier",
+    "mountain",
+    "sea",
+    "street"
+  ],
+  "por_clase_f1": {
+    "buildings": 0.7721123829344433,
+    "forest": 0.9655891553701773,
+    "glacier": 0.7801980198019802,
+    "mountain": 0.7796278158667973,
+    "sea": 0.8209934395501406,
+    "street": 0.8126272912423625
+  }
+}

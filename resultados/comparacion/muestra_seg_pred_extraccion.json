@@ -1,0 +1,114 @@
+[
+  {
+    "archivo": "11322.jpg",
+    "clase": "street",
+    "confianza": 0.9989,
+    "segunda": "buildings",
+    "conf_segunda": 0.0011
+  },
+  {
+    "archivo": "6296.jpg",
+    "clase": "mountain",
+    "confianza": 0.9038,
+    "segunda": "glacier",
+    "conf_segunda": 0.089
+  },
+  {
+    "archivo": "19117.jpg",
+    "clase": "buildings",
+    "confianza": 0.9916,
+    "segunda": "street",
+    "conf_segunda": 0.0084
+  },
+  {
+    "archivo": "6794.jpg",
+    "clase": "street",
+    "confianza": 0.9993,
+    "segunda": "buildings",
+    "conf_segunda": 0.0007
+  },
+  {
+    "archivo": "8015.jpg",
+    "clase": "buildings",
+    "confianza": 0.6182,
+    "segunda": "street",
+    "conf_segunda": 0.3818
+  },
+  {
+    "archivo": "8944.jpg",
+    "clase": "forest",
+    "confianza": 0.9998,
+    "segunda": "glacier",
+    "conf_segunda": 0.0002
+  },
+  {
+    "archivo": "16777.jpg",
+    "clase": "forest",
+    "confianza": 0.9973,
+    "segunda": "mountain",
+    "conf_segunda": 0.0014
+  },
+  {
+    "archivo": "6863.jpg",
+    "clase": "mountain",
+    "confianza": 0.7791,
+    "segunda": "glacier",
+    "conf_segunda": 0.2199
+  },
+  {
+    "archivo": "16270.jpg",
+    "clase": "street",
+    "confianza": 0.9959,
+    "segunda": "buildings",
+    "conf_segunda": 0.0041
+  },
+  {
+    "archivo": "10914.jpg",
+    "clase": "buildings",
+    "confianza": 0.9997,
+    "segunda": "street",
+    "conf_segunda": 0.0002
+  },
+  {
+    "archivo": "9237.jpg",
+    "clase": "buildings",
+    "confianza": 0.8524,
+    "segunda": "street",
+    "conf_segunda": 0.1453
+  },
+  {
+    "archivo": "21273.jpg",
+    "clase": "mountain",
+    "confianza": 0.9932,
+    "segunda": "glacier",
+    "conf_segunda": 0.0055
+  },
+  {
+    "archivo": "6253.jpg",
+    "clase": "mountain",
+    "confianza": 0.987,
+    "segunda": "glacier",
+    "conf_segunda": 0.007
+  },
+  {
+    "archivo": "20488.jpg",
+    "clase": "street",
+    "confianza": 0.9972,
+    "segunda": "buildings",
+    "conf_segunda": 0.0028
+  },
+  {
+    "archivo": "10395.jpg",
+    "clase": "street",
+    "confianza": 0.8994,
+    "segunda": "buildings",
+    "conf_segunda": 0.0998
+  },
+  {
+    "archivo": "10583.jpg",
+    "clase": "forest",
+    "confianza": 1.0,
+    "segunda": "glacier",
+    "conf_segunda": 0.0
+  }
+]
