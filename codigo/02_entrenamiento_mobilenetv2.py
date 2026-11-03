@@ -8,6 +8,7 @@ from pathlib import Path
 import os
 import csv
 import json
+import time
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -156,6 +157,7 @@ callbacks = [
     ),
 ]
 
+training_started = time.perf_counter()
 history = model.fit(
     train_ds,
     validation_data=validation_ds,
@@ -165,6 +167,10 @@ history = model.fit(
 )
 
 # EarlyStopping restaura los mejores pesos de validación antes de guardar.
+training_elapsed_seconds = time.perf_counter() - training_started
+elapsed_hours, elapsed_remainder = divmod(training_elapsed_seconds, 3600)
+elapsed_minutes, elapsed_seconds = divmod(elapsed_remainder, 60)
+training_elapsed_text = f"{int(elapsed_hours):02d}:{int(elapsed_minutes):02d}:{elapsed_seconds:05.2f}"
 model.save(MODEL_PATH)
 
 
@@ -214,3 +220,9 @@ print(f"val_accuracy en la mejor época: {history_dict['val_accuracy'][best_epoc
 print(f"Modelo guardado en: {MODEL_PATH}")
 print(f"Historial guardado en: {HISTORY_PATH}")
 print(f"Curvas guardadas en: {CURVES_PATH}")
+SUMMARY_PATH.write_text(
+    "Orden de clases: " + ", ".join(class_names) + "\n\n" + summary_text
+    + f"\n\nDuración de model.fit: {training_elapsed_text} ({training_elapsed_seconds:.2f} segundos).",
+    encoding="utf-8",
+)
+print(f"Duración de model.fit: {training_elapsed_text} ({training_elapsed_seconds:.2f} segundos)")
