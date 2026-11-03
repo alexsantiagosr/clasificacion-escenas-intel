@@ -1,0 +1,8 @@
+Archivo: seg_pred\seg_pred\10004.jpg
+Clase predicha: buildings
+Puntuación/confianza reportada por el modelo: 0.605995
+Nota: seg_pred no contiene etiquetas; no se puede confirmar si esta predicción es correcta.
+Puntuaciones de las 3 clases principales:
+buildings: 0.605995
+street: 0.393976
+mountain: 0.000014
