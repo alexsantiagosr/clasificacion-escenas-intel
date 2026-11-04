@@ -28,6 +28,8 @@ def leer(path, ep_col, offset=0):
     return ep, [float(r["val_accuracy"]) for r in rows], [float(r["val_loss"]) for r in rows]
 
 
+# Se combinan los historiales de ANN/CNN, el entrenamiento previo de extracción
+# y la fase posterior de fine-tuning para mostrar las curvas en orden temporal.
 series = [
     ("ANN densa", leer(RES / "historial_ann.csv", "epoch", 1), "#2a78d6", "o"),
     ("CNN desde cero", leer(RES / "historial_cnn.csv", "epoch", 1), "#eb6834", "s"),
@@ -56,7 +58,8 @@ axes[0].legend(loc="lower right", frameon=False, fontsize=9)
 fig.tight_layout()
 fig.savefig(RES / "comparacion_curvas_validacion.png", dpi=150)
 
-# Tabla
+# La tabla reúne métricas de validación y prueba; para extracción, el tiempo
+# permanece vacío porque esa primera ejecución no lo registró.
 filas = []
 for kind, nombre in (("ann", "ANN densa"), ("cnn", "CNN desde cero")):
     d = json.loads((RES / f"resultado_{kind}.json").read_text(encoding="utf-8"))

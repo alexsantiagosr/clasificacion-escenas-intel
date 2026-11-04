@@ -16,6 +16,10 @@ import tensorflow as tf
 
 
 # %% 1. Configuración
+# Esta sección fija los valores que deben coincidir en todas las etapas. PROJECT_DIR
+# se calcula a partir de este archivo, así que las rutas no dependen de la carpeta
+# desde la que se ejecute Python. INTEL_DATASET_DIR permite indicar otra ubicación
+# del dataset sin modificar el código; si no se define, se busca junto al proyecto.
 PROJECT_DIR = Path(__file__).resolve().parents[1]
 DATASET_ROOT = Path(os.environ.get("INTEL_DATASET_DIR", PROJECT_DIR.parent / "archive")).expanduser().resolve()
 TRAIN_DIR = DATASET_ROOT / "seg_train" / "seg_train"
@@ -29,12 +33,17 @@ SEED = 42
 
 
 # %% 2. Comprobación de rutas
+# Fallar aquí con un mensaje claro evita que TensorFlow empiece a leer una ruta
+# incorrecta y produzca un error más difícil de interpretar después.
 for directory in (TRAIN_DIR, TEST_DIR, PREDICT_DIR):
     if not directory.is_dir():
         raise FileNotFoundError(f"No existe la carpeta esperada: {directory}")
 
 
 # %% 3. Conteo de archivos por clase
+# Estas funciones revisan las carpetas sin cargar todos los píxeles en memoria.
+# En seg_train y seg_test, cada subcarpeta representa una clase; seg_pred no tiene
+# etiquetas y por eso sus imágenes se cuentan directamente en su carpeta.
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp"}
 
 
@@ -78,6 +87,11 @@ print("Imágenes para predicción (sin etiquetas):", prediction_count)
 
 
 # %% 4. Carga de entrenamiento y validación
+# image_dataset_from_directory lee las imágenes por lotes, les asigna la etiqueta
+# según su subcarpeta y las ajusta a IMAGE_SIZE. label_mode="int" produce y como
+# enteros (0 a 5), que se conservan así para sparse_categorical_crossentropy.
+# La partición 80/20 sale solo de seg_train: validación ayuda a tomar decisiones;
+# seg_test queda aparte para medir el resultado final una sola vez.
 # La validación se separa desde seg_train. seg_test queda reservado para el
 # resultado final y no participa en las decisiones tomadas durante el entrenamiento.
 train_ds = tf.keras.utils.image_dataset_from_directory(
@@ -120,6 +134,8 @@ print("Orden de etiquetas:", train_ds.class_names)
 
 
 # %% 5. Rendimiento del pipeline de lectura
+# prefetch permite preparar el siguiente lote mientras el modelo procesa el actual.
+# AUTOTUNE deja que TensorFlow ajuste esa preparación al equipo disponible.
 AUTOTUNE = tf.data.AUTOTUNE
 train_ds = train_ds.prefetch(buffer_size=AUTOTUNE)
 validation_ds = validation_ds.prefetch(buffer_size=AUTOTUNE)
@@ -127,6 +143,9 @@ test_ds = test_ds.prefetch(buffer_size=AUTOTUNE)
 
 
 # %% 6. Inspección visual de un lote
+# La cuadrícula sirve para revisar que las imágenes se abrieron, redimensionaron
+# y etiquetaron razonablemente. Se convierten a enteros solo para mostrarlas; esto
+# no cambia los datos del conjunto. En este paso X sigue en escala 0..255.
 images, labels = next(iter(train_ds))
 plt.figure(figsize=(10, 8))
 for index in range(min(9, len(images))):

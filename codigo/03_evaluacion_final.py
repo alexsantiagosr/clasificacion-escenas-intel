@@ -12,6 +12,9 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 
 
 # %% 1. Configuración
+# Se recupera el mismo orden de clases guardado durante el entrenamiento. Es
+# esencial: la salida 0, por ejemplo, solo significa la primera clase de ese orden.
+# El archivo del modelo y el dataset de prueba deben existir antes de continuar.
 PROJECT_DIR = Path(__file__).resolve().parents[1]
 DATASET_ROOT = Path(os.environ.get("INTEL_DATASET_DIR", PROJECT_DIR.parent / "archive")).expanduser().resolve()
 TEST_DIR = DATASET_ROOT / "seg_test" / "seg_test"
@@ -33,6 +36,9 @@ if not MODEL_PATH.is_file():
 
 
 # %% 2. Carga del modelo y del conjunto de prueba
+# seg_test no intervino en el ajuste de pesos ni en la selección de la época.
+# shuffle=False mantiene alineadas las etiquetas con la lista de archivos para
+# generar después un CSV donde cada predicción pueda rastrearse a su imagen.
 # Esta evaluación usa seg_test una vez que la selección del modelo ya se hizo
 # mirando únicamente val_loss y val_accuracy.
 model = tf.keras.models.load_model(MODEL_PATH)
@@ -55,6 +61,9 @@ test_paths = [
 
 
 # %% 3. Predicción de prueba
+# El modelo entrega seis puntuaciones por imagen. Se concatenan los lotes para
+# calcular las métricas sobre todo el conjunto. argmax elige el índice de mayor
+# puntuación como clase predicha; y_true son las clases reales de las carpetas.
 y_true_batches = []
 y_probability_batches = []
 
@@ -74,6 +83,11 @@ if len(test_paths) != len(y_true):
 
 
 # %% 4. Métricas multiclase
+# Accuracy es la fracción total de aciertos. Log loss penaliza más las predicciones
+# muy seguras pero equivocadas. classification_report calcula precision (aciertos
+# entre predicciones de una clase), recall (aciertos encontrados entre los casos
+# reales de esa clase) y F1 (equilibrio entre ambas), además de promedios. La matriz
+# de confusión cuenta las clases reales frente a las predichas.
 label_ids = list(range(len(class_names)))
 accuracy = accuracy_score(y_true, y_predicted)
 test_crossentropy = log_loss(y_true, y_probabilities, labels=label_ids)
@@ -99,6 +113,9 @@ print(summary)
 
 
 # %% 5. Matriz de confusión
+# Las filas representan la clase real y las columnas la predicha. Los valores de
+# la diagonal son aciertos; fuera de ella quedan los tipos de confusión. Se guarda
+# la figura para incluirla como evidencia en el análisis y en el informe.
 fig, ax = plt.subplots(figsize=(8, 7))
 image = ax.imshow(matrix, cmap="Blues")
 fig.colorbar(image, ax=ax, fraction=0.046, pad=0.04)
@@ -129,6 +146,9 @@ plt.show()
 
 
 # %% 6. Tabla de predicciones para revisar aciertos y errores
+# Este CSV conserva para cada archivo la etiqueta verdadera, la predicción y su
+# puntuación más alta. Permite investigar ejemplos concretos; la puntuación del
+# modelo no garantiza por sí sola que la predicción sea correcta.
 with (RESULTS_DIR / "predicciones_prueba.csv").open(
     "w", newline="", encoding="utf-8"
 ) as csv_file:

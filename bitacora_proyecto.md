@@ -143,3 +143,20 @@ Se creó `app/app.py` con Streamlit. Acepta JPG/JPEG/PNG, convierte a RGB, redim
 - La explicación bajo la clase predicha describe el significado de la categoría y compara las dos puntuaciones mayores; no es una explicación de píxeles o regiones (no se implementó Grad-CAM ni otro método XAI).
 
 - Cambio del 3 de noviembre de 2026: la aplicación ofrece dos métodos de entrada, subir un JPG/JPEG/PNG o capturar una imagen con `st.camera_input`. La captura se carga en la app y usa la misma conversión RGB, corrección de orientación EXIF y redimensión a 160 × 160 que el flujo de inferencia. En celular, el navegador puede pedir permiso de cámara cuando se selecciona esa opción. Se publicó en GitHub en el commit `2bcda43` (`Mejorar interfaz y añadir captura con cámara`). Los registros de Streamlit Cloud indicaron `Updated app!` y la app publicada mostró el selector actualizado. Queda pendiente probar una captura real desde un celular y conceder permiso de cámara en ese dispositivo.
+
+## Comparación de arquitecturas y selección del modelo final (3 de noviembre de 2026)
+
+Se incorporaron los experimentos del PR #1, integrado en GitHub en el commit `548f4a0` (mensaje en español). Los cuatro enfoques se compararon con la partición de `seg_train` 80/20, semilla 42, entrada 160 × 160 y lotes de 32. `seg_test` (3.000 imágenes) se usó para informar las métricas finales; la elección entre extracción y fine-tuning se basó en `val_loss`.
+
+| Enfoque | Épocas | Mejor `val_loss` | Accuracy de validación | Accuracy de prueba | F1 macro de prueba | Duración registrada de `fit` |
+|---|---:|---:|---:|---:|---:|---:|
+| ANN densa | 10 | 1,489 | 40,4 % | 39,1 % | 35,0 % | 13 min 10 s |
+| CNN desde cero | 15 | 0,483 | 82,1 % | 82,1 % | 82,2 % | 2 h 12 min 25,5 s |
+| MobileNetV2, extracción | 15 | 0,220 | 91,9 % | 91,4 % | 91,5 % | No quedó registrada en la primera ejecución |
+| MobileNetV2, fine-tuning | 6 adicionales | **0,194** | **92,7 %** | **92,5 %** | **92,6 %** | 18 min 46 s para esta fase |
+
+El fine-tuning partió del extractor ya entrenado, descongeló las últimas 30 capas de MobileNetV2 y mantuvo congeladas las capas BatchNormalization. Como obtuvo menor `val_loss` (0,194 frente a 0,220) y mejores métricas de prueba, se seleccionó como modelo final. La mejora de accuracy de prueba frente a la extracción es de aproximadamente 1,1 puntos porcentuales; se considera una mejora moderada. La CNN desde cero supera claramente la ANN, lo que respalda el uso de convoluciones para conservar y aprender patrones espaciales de las imágenes.
+
+Los tiempos son los registrados por la corrida del PR y dependen del equipo. No se debe atribuir al extractor una duración reconstruida: la primera ejecución no la guardó. Los historiales, métricas por clase, matrices de confusión, curvas, tabla y grillas de `seg_pred` están en `resultados/comparacion/`. `seg_pred` no tiene etiquetas; las grillas ilustran salidas, no aciertos comprobados.
+
+La aplicación local ahora carga `modelo_escenas_mobilenetv2_finetune.keras` y muestra las métricas correspondientes. Este cambio permanece local; el merge del PR no cambió `app.py`, así que la versión desplegada sigue usando el modelo de extracción hasta que se publique una actualización posterior.

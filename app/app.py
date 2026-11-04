@@ -8,11 +8,15 @@ import streamlit as st
 from PIL import Image, ImageOps
 
 
+# La aplicación comparte el modelo entrenado y el archivo de clases del proyecto.
+# IMAGE_SIZE y el formato RGB deben coincidir con el preprocesamiento de entrenamiento.
 PROJECT_DIR = Path(__file__).resolve().parents[1]
-MODEL_PATH = PROJECT_DIR / "modelos" / "modelo_escenas_mobilenetv2.keras"
+MODEL_PATH = PROJECT_DIR / "modelos" / "modelo_escenas_mobilenetv2_finetune.keras"
 CLASSES_PATH = PROJECT_DIR / "modelos" / "clases.json"
 IMAGE_SIZE = (160, 160)
 
+# Los nombres internos en inglés deben permanecer en el mismo orden y escritura
+# que las carpetas del dataset; aquí solo se traducen para mostrarlos en pantalla.
 CLASS_LABELS = {
     "buildings": "Edificios",
     "forest": "Bosque",
@@ -73,6 +77,8 @@ st.markdown(
 )
 
 
+# Cargar TensorFlow y un modelo puede tardar. El caché evita volver a cargarlos
+# en cada interacción de Streamlit; se comprueba que haya seis salidas y seis nombres.
 @st.cache_resource
 def load_model_and_classes():
     """Carga el modelo una vez y verifica el orden de las seis clases."""
@@ -106,10 +112,10 @@ st.write(
 with st.sidebar:
     st.header("Sobre este modelo")
     st.write("**Arquitectura:** CNN MobileNetV2 con transferencia de aprendizaje.")
-    st.write("**Estrategia:** extracción de características; la base preentrenada se mantuvo congelada.")
+    st.write("**Estrategia:** fine-tuning de las últimas 30 capas; las capas BatchNormalization se mantuvieron congeladas.")
     st.write("**Categorías:** edificios, bosque, glaciar, montaña, mar y calle.")
-    st.metric("Exactitud en prueba (accuracy)", "91,37 %", help="Evaluado una vez sobre 3.000 imágenes reservadas.")
-    st.metric("F1 macro en prueba", "91,54 %", help="Promedio que da el mismo peso a cada una de las seis clases.")
+    st.metric("Exactitud en prueba (accuracy)", "92,47 %", help="MobileNetV2 con fine-tuning; evaluado una vez sobre 3.000 imágenes reservadas.")
+    st.metric("F1 macro en prueba", "92,59 %", help="MobileNetV2 con fine-tuning; promedio con igual peso para las seis clases.")
     st.caption("La evaluación final se hizo con seg_test, separado del entrenamiento y la validación.")
 
 with st.expander("¿Cómo prepara y procesa la imagen?", expanded=False):
@@ -125,6 +131,8 @@ with st.expander("¿Cómo prepara y procesa la imagen?", expanded=False):
         """
     )
 
+# El usuario puede elegir un archivo existente o usar la cámara del dispositivo.
+# Ambos caminos entregan un archivo de imagen al mismo preprocesamiento inferior.
 input_method = st.radio(
     "¿Cómo quieres añadir la fotografía?",
     ["Subir desde el dispositivo", "Tomar foto con la cámara"],
@@ -152,10 +160,15 @@ if uploaded_file is None:
     st.info("Sube una imagen o toma una foto para ver la categoría estimada, las alternativas y una explicación del resultado.")
 else:
     try:
+        # Se corrige la orientación EXIF de fotos de celular, se convierte a RGB y se
+        # redimensiona igual que en entrenamiento. Los píxeles se mantienen 0..255;
+        # la normalización a [-1, 1] está incorporada en el modelo cargado.
         original_image = ImageOps.exif_transpose(Image.open(uploaded_file)).convert("RGB")
         resized_image = original_image.resize(IMAGE_SIZE, Image.Resampling.BILINEAR)
         image_array = np.asarray(resized_image, dtype=np.float32)
 
+        # predict recibe un lote de una imagen y devuelve seis puntuaciones softmax.
+        # La clase de mayor puntuación encabeza la lista mostrada al usuario.
         with st.spinner("Cargando el modelo y analizando la escena…"):
             model, class_names = load_model_and_classes()
             scores = model.predict(np.expand_dims(image_array, axis=0), verbose=0)[0]

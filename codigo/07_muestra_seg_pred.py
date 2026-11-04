@@ -17,17 +17,24 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-ROOT = Path(os.environ["INTEL_DATASET_DIR"])
+# Usa el mismo valor por defecto que los scripts de preparación; puede
+# sustituirse definiendo INTEL_DATASET_DIR en la consola.
+PROJECT_DIR = Path(__file__).resolve().parents[1]
+ROOT = Path(os.environ.get("INTEL_DATASET_DIR", PROJECT_DIR.parent / "archive")).expanduser().resolve()
 PRED_DIR = ROOT / "seg_pred" / "seg_pred"
 OUT = Path(os.environ.get("SALIDA", Path(__file__).resolve().parents[1] / "resultados" / "comparacion"))
 CLASSES = ["buildings", "forest", "glacier", "mountain", "sea", "street"]
 
+# seg_pred no tiene etiquetas reales: estas imágenes ilustran predicciones,
+# pero no sirven para calcular exactitud ni confirmar si una salida acertó.
 model = tf.keras.models.load_model(sys.argv[1])
 name = sys.argv[2]
 paths = sorted(PRED_DIR.glob("*.jpg"))
 random.Random(42).shuffle(paths)
 sample = paths[:16]
 
+# La aplicación hace el mismo preprocesamiento RGB y 160x160. La normalización
+# a [-1, 1] ocurre dentro del modelo guardado, así que no se repite aquí.
 images = np.stack([
     np.asarray(tf.keras.utils.load_img(p, target_size=(160, 160), interpolation="bilinear"), dtype=np.float32)
     for p in sample

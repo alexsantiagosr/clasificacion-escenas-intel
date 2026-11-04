@@ -30,18 +30,26 @@ IMAGE_SIZE = (160, 160)
 BATCH_SIZE = 32
 VALIDATION_SPLIT = 0.20
 
-ROOT = Path(os.environ["INTEL_DATASET_DIR"])
+PROJECT_DIR = Path(__file__).resolve().parents[1]
+# Si no se define INTEL_DATASET_DIR, el conjunto se busca en ../archive,
+# igual que en los scripts iniciales del proyecto.
+ROOT = Path(os.environ.get("INTEL_DATASET_DIR", PROJECT_DIR.parent / "archive")).expanduser().resolve()
 TRAIN_DIR = ROOT / "seg_train" / "seg_train"
 TEST_DIR = ROOT / "seg_test" / "seg_test"
-PROJECT_DIR = Path(__file__).resolve().parents[1]
 OUT = Path(os.environ.get("SALIDA", PROJECT_DIR / "resultados" / "comparacion"))
 OUT.mkdir(parents=True, exist_ok=True)
 
+# La misma semilla fija la partición 80/20 y la inicialización aleatoria de redes.
 tf.keras.utils.set_random_seed(SEED)
+# El nombre de cada subcarpeta es la etiqueta; el orden alfabético se conserva
+# al interpretar las seis salidas softmax.
 CLASSES = sorted(p.name for p in TRAIN_DIR.iterdir() if p.is_dir())
 
 
 def load(directory, subset=None, shuffle=True):
+    """Lee lotes RGB y asigna etiquetas enteras a partir de las carpetas."""
+    # Si subset es training/validation, Keras parte seg_train con el porcentaje y
+    # semilla comunes. Las etiquetas y no se escalan; solo los píxeles de X.
     kwargs = dict(labels="inferred", label_mode="int", class_names=CLASSES,
                   image_size=IMAGE_SIZE, batch_size=BATCH_SIZE, seed=SEED, shuffle=shuffle)
     if subset:
@@ -53,6 +61,8 @@ train_ds = load(TRAIN_DIR, "training")
 val_ds = load(TRAIN_DIR, "validation")
 test_ds = load(TEST_DIR, shuffle=False)
 
+# El aumento aleatorio actúa solo cuando el modelo está en modo de entrenamiento.
+# Durante validación e inferencia se usa la imagen sin alteraciones aleatorias.
 augment = tf.keras.Sequential([
     tf.keras.layers.RandomFlip("horizontal"),
     tf.keras.layers.RandomRotation(0.05),
@@ -114,6 +124,8 @@ def main(kind):
     total = int(model.count_params())
     print(f"[{kind}] parámetros entrenables={trainable:,} total={total:,}", flush=True)
 
+    # Se eligen pesos con val_loss, nunca con el resultado de seg_test.
+    # EarlyStopping restaura al terminar los pesos de la mejor época de validación.
     callbacks = [
         tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=3, restore_best_weights=True),
         tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.2, patience=2, min_lr=1e-7),
@@ -123,6 +135,8 @@ def main(kind):
     hist = model.fit(train_ds, validation_data=val_ds, epochs=epochs, callbacks=callbacks, verbose=2)
     train_s = time.time() - t0
 
+    # Solo después del ajuste se hace una pasada por seg_test para reportar
+    # las métricas finales; sus resultados no modifican la selección del modelo.
     best = int(np.argmin(hist.history["val_loss"]))
     y_true = np.concatenate([y.numpy() for _, y in test_ds])
     probs = model.predict(test_ds, verbose=0)

@@ -15,6 +15,9 @@ import tensorflow as tf
 
 
 # %% 1. Configuración y rutas
+# Se centralizan tamaños, número máximo de épocas y ubicaciones de entradas y
+# salidas para que el entrenamiento sea reproducible y sus resultados queden
+# guardados en carpetas conocidas. Una época es una pasada completa por train_ds.
 PROJECT_DIR = Path(__file__).resolve().parents[1]
 DATASET_ROOT = Path(os.environ.get("INTEL_DATASET_DIR", PROJECT_DIR.parent / "archive")).expanduser().resolve()
 TRAIN_DIR = DATASET_ROOT / "seg_train" / "seg_train"
@@ -50,6 +53,9 @@ print("Épocas máximas:", EPOCHS)
 
 
 # %% 2. Carga de entrenamiento y validación
+# Las etiquetas se infieren de los nombres de las carpetas y quedan como índices
+# enteros. class_names fija el mismo orden que se guardará para interpretar las
+# salidas del modelo luego. La semilla hace repetible la separación 80/20.
 # La misma semilla y el mismo porcentaje garantizan una partición reproducible.
 # Las imágenes llegan con valores 0..255; la normalización para MobileNetV2 se
 # incorpora dentro del propio modelo más abajo.
@@ -85,6 +91,11 @@ validation_ds = validation_ds.prefetch(buffer_size=AUTOTUNE)
 
 
 # %% 3. Aumento de datos y base preentrenada
+# Data augmentation crea variaciones aleatorias (espejo, giro leve y zoom) para
+# que la red no memorice exactamente las fotos de entrenamiento. Keras lo aplica
+# solo al entrenar, no al validar ni al predecir. MobileNetV2 ya aprendió patrones
+# visuales con ImageNet; include_top=False retira su clasificador original y
+# trainable=False congela sus pesos para usarlos como extractor de características.
 # El aumento solo se activa durante entrenamiento; las imágenes de validación
 # conservan su contenido original.
 data_augmentation = tf.keras.Sequential(
@@ -105,6 +116,15 @@ base_model.trainable = False
 
 
 # %% 4. Clasificador para las seis escenas
+# La entrada es un lote de imágenes RGB con X entre 0 y 255. El aumento se aplica
+# durante entrenamiento y Rescaling transforma cada píxel a [-1, 1], rango que
+# espera MobileNetV2. Esta capa dentro del modelo asegura que entrenamiento y
+# aplicación web compartan exactamente la misma normalización. y no se normaliza:
+# son etiquetas de clase enteras, requeridas por sparse_categorical_crossentropy.
+# GlobalAveragePooling resume mapas espaciales con menos parámetros que Flatten;
+# Dropout desactiva aleatoriamente algunas activaciones para reducir sobreajuste;
+# Dense(6, softmax) entrega una puntuación por clase y su suma es 1. Adam actualiza
+# el clasificador; la pérdida compara sus puntuaciones con las etiquetas correctas.
 inputs = tf.keras.Input(shape=(*IMAGE_SIZE, 3), name="imagen_rgb_0_255")
 x = data_augmentation(inputs)
 # MobileNetV2 espera los píxeles escalados entre -1 y 1.
@@ -132,6 +152,11 @@ SUMMARY_PATH.write_text(
 
 
 # %% 5. Entrenamiento con control de sobreajuste
+# ModelCheckpoint conserva el estado con menor pérdida de validación. EarlyStopping
+# detiene el proceso si val_loss deja de mejorar y restaura los mejores pesos.
+# ReduceLROnPlateau baja el learning rate (tamaño de cada ajuste) cuando la mejora
+# se estanca. El cronómetro mide solo model.fit y se registra para el informe;
+# incluye las épocas que realmente se ejecutaron hasta completar o detenerse.
 callbacks = [
     tf.keras.callbacks.ModelCheckpoint(
         filepath=MODEL_PATH,
@@ -175,6 +200,10 @@ model.save(MODEL_PATH)
 
 
 # %% 6. Guardado de historial y curvas
+# history contiene métricas por época. El CSV facilita revisar los valores exactos;
+# las gráficas muestran cómo cambian accuracy (proporción de aciertos) y loss
+# (error de predicción) en entrenamiento y validación. La mejor época se identifica
+# por la menor val_loss, criterio usado por los callbacks para guardar el modelo.
 history_dict = history.history
 best_epoch = min(range(len(history_dict["val_loss"])), key=history_dict["val_loss"].__getitem__)
 

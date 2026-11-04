@@ -10,6 +10,8 @@ import tensorflow as tf
 
 
 # %% 1. Rutas y clases
+# seg_pred contiene imágenes sin etiqueta. Aquí solo se comprueba que haya archivos
+# compatibles y se lee el orden de clases guardado junto al modelo.
 PROJECT_DIR = Path(__file__).resolve().parents[1]
 DATASET_ROOT = Path(os.environ.get("INTEL_DATASET_DIR", PROJECT_DIR.parent / "archive")).expanduser().resolve()
 PREDICT_DIR = DATASET_ROOT / "seg_pred" / "seg_pred"
@@ -29,6 +31,9 @@ if not image_paths:
 
 
 # %% 2. Carga de una muestra y del modelo final
+# La imagen se redimensiona al mismo tamaño que en entrenamiento y se convierte
+# a un arreglo RGB de tipo float32. Se deja en escala 0..255: la capa Rescaling
+# guardada dentro del modelo la transforma a [-1, 1].
 # Selección determinista: se usa el primer archivo por nombre para que la
 # demostración pueda repetirse y documentarse.
 sample_path = image_paths[0]
@@ -38,6 +43,9 @@ image_array = tf.keras.utils.img_to_array(image).astype("float32")
 
 
 # %% 3. Predicción y principales alternativas
+# Se añade una dimensión de lote porque Keras recibe imágenes con forma
+# (cantidad, alto, ancho, canales), incluso si solo se clasifica una. Las salidas
+# softmax se ordenan para mostrar la clase de mayor puntuación y dos alternativas.
 probabilities = model.predict(np.expand_dims(image_array, axis=0), verbose=0)[0]
 top_indices = np.argsort(probabilities)[::-1][:3]
 predicted_index = int(top_indices[0])
@@ -53,6 +61,9 @@ for index in top_indices:
 
 
 # %% 4. Guardado de evidencia visual y textual
+# Se guarda la imagen con su resultado y un resumen de texto. Como seg_pred carece
+# de etiquetas reales, esta salida demuestra el uso del modelo pero no permite
+# afirmar si acertó o calcular métricas de desempeño.
 fig, ax = plt.subplots(figsize=(6, 5))
 ax.imshow(image)
 ax.set_title(f"Predicción: {predicted_class} ({confidence:.1%})")
