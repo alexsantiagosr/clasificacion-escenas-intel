@@ -1,0 +1,80 @@
+{
+  "modelo": "finetune",
+  "parametros_entrenables": 1518406,
+  "parametros_totales": 2265670,
+  "epocas_corridas": 6,
+  "mejor_epoca_val": 5,
+  "val_loss_mejor": 0.19402192533016205,
+  "val_accuracy_mejor": 0.9265859127044678,
+  "test_accuracy": 0.9246666666666666,
+  "test_f1_macro": 0.925922543970414,
+  "test_precision_macro": 0.9262156748044656,
+  "test_recall_macro": 0.9259938536515734,
+  "segundos_entrenamiento": 1126.0,
+  "matriz_confusion": [
+    [
+      394,
+      2,
+      1,
+      0,
+      1,
+      39
+    ],
+    [
+      0,
+      471,
+      2,
+      0,
+      0,
+      1
+    ],
+    [
+      1,
+      3,
+      484,
+      47,
+      15,
+      3
+    ],
+    [
+      1,
+      3,
+      57,
+      455,
+      7,
+      2
+    ],
+    [
+      2,
+      0,
+      7,
+      7,
+      492,
+      2
+    ],
+    [
+      23,
+      0,
+      0,
+      0,
+      0,
+      478
+    ]
+  ],
+  "clases": [
+    "buildings",
+    "forest",
+    "glacier",
+    "mountain",
+    "sea",
+    "street"
+  ],
+  "por_clase_f1": {
+    "buildings": 0.9184149184149184,
+    "forest": 0.9884575026232949,
+    "glacier": 0.8768115942028986,
+    "mountain": 0.8800773694390716,
+    "sea": 0.96,
+    "street": 0.9317738791423001
+  }
+}

@@ -1,0 +1,5 @@
+nombre,parametros_entrenables,parametros_totales,mejor_epoca_val,val_loss_mejor,val_accuracy_mejor,test_accuracy,test_f1_macro,test_precision_macro,test_recall_macro,segundos_entrenamiento
+ANN densa,19694726,19694726,10,1.4888,0.4038,0.3913,0.35,0.3269,0.3885,789.9
+CNN desde cero,110758,111206,14,0.483,0.8215,0.821,0.8219,0.8238,0.8253,7945.5
+TL: extracción,7686,2265670,14,0.2199,0.9191,0.9137,0.9154,0.9155,0.9157,no registrado
+TL: fine-tuning,1518406,2265670,5,0.194,0.9266,0.9247,0.9259,0.9262,0.926,1126.0
